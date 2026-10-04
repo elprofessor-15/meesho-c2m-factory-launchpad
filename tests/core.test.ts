@@ -5,8 +5,21 @@ import {forecast} from '../src/lib/forecast/engine';
 import {confirm,prepare} from '../src/lib/assistant/actions';
 import {responseLanguage} from '../src/lib/i18n';
 import {assertFreeElevenLabsAccount} from '../src/lib/providers/elevenlabs-free';
+import {quotaMessage,speechQuotaSeconds} from '../src/lib/server/quota-policy';
 
 describe('voice language and free provider limits',()=>{
+  it('charges measured speech seconds rather than the recording maximum',()=>{
+    expect(speechQuotaSeconds(2.1)).toBe(3);
+    expect(speechQuotaSeconds(2.1,3.4)).toBe(4);
+    expect(speechQuotaSeconds(45)).toBe(45);
+    expect(()=>speechQuotaSeconds(47)).toThrow(/between 0 and 45 seconds/);
+  });
+
+  it('explains the speech limit and preserves the typed fallback',()=>{
+    expect(quotaMessage('stt')).toMatch(/keep typing questions/);
+    expect(quotaMessage('tts')).toMatch(/text answer is still available/);
+  });
+
   it('uses the transcribed Hindi language even when the interface is English',()=>{
     expect(responseLanguage('Aaj kitne orders bhejne hain?','en','hin')).toBe('hi');
   });
