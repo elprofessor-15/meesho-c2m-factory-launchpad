@@ -111,12 +111,12 @@ begin
   values (counter_scope, (now() at time zone 'utc')::date, quota_kind, 0)
   on conflict (scope, usage_day, quota_kind) do nothing;
 
-  update public.quota_counters
-  set used = used + amount
-  where scope = counter_scope
-    and usage_day = (now() at time zone 'utc')::date
-    and quota_counters.quota_kind = consume_quota.quota_kind
-    and used + amount <= max_value;
+  update public.quota_counters as counter
+  set used = counter.used + $2
+  where counter.scope = counter_scope
+    and counter.usage_day = (now() at time zone 'utc')::date
+    and counter.quota_kind = $1
+    and counter.used + $2 <= $3;
 
   return found;
 end;
