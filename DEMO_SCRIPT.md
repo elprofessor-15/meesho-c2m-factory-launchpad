@@ -10,3 +10,13 @@
 8. Return to seller view and verify the same support status.
 
 All records are synthetic. Forecast results are not calibrated on live performance. Provider speech is shown only after it has actually succeeded; otherwise use the visible text response.
+## Demonstrate the stronger factory proposition
+
+1. On Today, open Launch commitment. Show why an unassigned packing worker leads to Hold despite forecast demand.
+2. Edit operating setup. Record a sample packing owner, parcel capacity and the three initial readiness checks. Explain these are demonstration attestations.
+3. Review the recomputed recommendation and manufacturer-specific economics. Confirm a bounded stock commitment; inspect the persistent history.
+4. Turn on Factory Mode. Open Orders and inspect the SKU/deadline batches. Download the packing list and per-order DEMO labels.
+5. Ask, “Aaj kya pack karna hai?” The configured model can retrieve exact batches. Ask to mark a specific batch packed. Review the confirmation and show the backend status change. Pickup stays unconfirmed.
+6. Open Help to show the named contact and callback workflow. Operations can record the request outcome and support minutes.
+7. Record a workload observation. Explain that time saved needs a measured comparison, not this sample total.
+8. Demonstrate the SMS simulator with an ambiguous `DISPATCH` reply. It is rejected. No real SMS or telephone call occurs.

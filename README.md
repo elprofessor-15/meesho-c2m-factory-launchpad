@@ -57,3 +57,8 @@ Hosted persistence currently stores a versioned JSON state document per authenti
 - [VOICE_TEST_PLAN.md](VOICE_TEST_PLAN.md)
 - [DEMO_SCRIPT.md](DEMO_SCRIPT.md)
 - [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md)
+## Factory operations update
+
+The new `/commitment` workspace separates demand evidence, physical readiness and the next bounded stock decision. Factory Mode reduces seller navigation to five daily destinations. Batch preparation groups exact SKU/variant/deadline work, exports packing lists and labels, and confirms all affected orders atomically. The named activation contact and first-cycle checklist make ownership explicit. Workload records measure owner time, worker time and errors without inventing a time-saving claim.
+
+See [FACTORY_MODE.md](FACTORY_MODE.md) for the decision rules, SMS simulator boundary and remaining validation requirements. The SMS simulator does not send messages; real carrier pickup and minimum orders are never promised.

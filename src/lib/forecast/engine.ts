@@ -4,7 +4,7 @@ const quant=(a:number[],q:number)=>{const b=[...a].sort((x,y)=>x-y);return b[Mat
 function rng(seed:number){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
 export function forecast(p:Inputs,observations:Observation[]){
  const eligible=observations.filter(o=>o.day<0&&o.available&&o.category===p.category&&Math.abs(o.price/p.price-1)<=.25&&o.age<=Math.max(30,p.age+15));
- const own=eligible.filter(o=>o.sku===p.id&&o.day>=-p.age);const comparable=eligible.filter(o=>o.sku!==p.id);
+ const own=observations.filter(o=>o.sku===p.id&&o.day<0&&o.day>=-p.age&&o.available&&Math.abs(o.price/p.price-1)<=.25);const comparable=eligible.filter(o=>o.sku!==p.id);
  const missing=['cost','packaging','forward','reverse','fees'].filter(k=>p[k as keyof Product]===null);
  const base={missing,comparableProducts:new Set(comparable.map(o=>o.sku)).size,eligibleDays:eligible.length,ownDays:own.length};
  if(comparable.length<14||!comparable.reduce((s,o)=>s+o.visits,0))return{...base,status:'insufficient' as const,reason:'Insufficient comparable observations in this price band and launch stage.'};

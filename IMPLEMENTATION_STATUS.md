@@ -36,3 +36,23 @@
 ## Latest local checks
 
 See the session delivery notes for the final results of `npm run typecheck`, `npm run lint`, `npm test`, `npm run test:e2e`, and `npm run build`.
+## Factory operations update (4 October 2026)
+
+Implemented: five-destination Factory Mode, exact SKU/deadline batch grouping, batch picking-list export, per-order DEMO labels, atomic confirmed batch packing, launch readiness attestations, named activation contact, separate demand/readiness/commitment decisions, conditional stock commitment history, self-reported workload observations, conversation context on support escalation and a clearly labelled SMS reply simulator.
+
+Tests added: grouping conservation, batch snapshot concurrency, idempotency, user scoping, exact-SKU tool filtering, missing physical owner, insufficient exposure, missing costs, contribution floor, cash/capacity bounds, stale commitment rejection and legacy pilot gating. Browser coverage includes Factory Mode, batch confirmation, readiness, commitment persistence, workload capture, SMS validation and responsive page overflow at 1440, 1024, 768 and 390 pixels.
+
+Not implemented: real SMS delivery or inbound telephony, sender identity verification by a telecom provider, real carrier integrations, independently verified operational readiness, research-validated thresholds, calibrated forecast accuracy or measured time savings. Commitment records are planning decisions, not production orders or inventory reservations. A new repository is used for this update while the previous repository is preserved.
+
+### Verification for this update
+
+- TypeScript: passed.
+- ESLint: passed.
+- Vitest: 20 tests passed.
+- Playwright: 5 tests passed, including 16 route/viewport combinations for the new surfaces.
+- Production build: passed on Next.js 16.3.8.
+- Production dependency audit: zero reported vulnerabilities.
+- Working-tree and Git-history secret scan: passed. Only `.env.example` is tracked.
+- App source and authored documentation contain no em dashes.
+- Current live batch-assistant smoke request: returned an unavailable/quota response after configured-provider fallback. No live success is claimed for this update. Earlier live checks above are historical, not a guarantee of present provider quota or availability.
+- Rendered desktop and mobile screenshots inspected. Local app responds at http://localhost:3000.

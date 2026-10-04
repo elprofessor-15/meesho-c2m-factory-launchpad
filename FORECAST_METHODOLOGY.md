@@ -19,3 +19,8 @@ Cancellation, RTO, and return assumptions use different denominators: placed, sh
 ## Limits and future validation
 
 Insufficient comparable evidence returns an explicit limited-evidence state. Price outside the comparison band requires more evidence; the implementation does not invent price elasticity. Before any production use, compare time-based holdout forecasts against mature observations, evaluate calibration and interval coverage by category/cohort, document exclusions and drift, and revise assumptions with measured data. Do not describe this prototype's scenario interval as validated forecast accuracy.
+## Commitment policy
+
+Consumer demand remains independent of factory capacity. The separate launch policy in `src/lib/launch.ts` uses observed own-product detail visits, eligible days, conversion, individual minimum monthly volume and contribution floor. Operating ownership and parcel capacity are independent gates. Missing information produces Hold; a below-floor contribution produces Pause. No commitment is a purchase order, production booking or minimum-order guarantee.
+
+Own-product history is eligible by historical date, availability and supported price range. Comparable launch-stage filtering is applied to comparables, not used to discard the SKU's recent own history. Cumulative uncertainty remains calculated from complete trajectories.

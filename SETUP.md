@@ -51,3 +51,6 @@ The migration currently persists one versioned JSON document per user and separa
 Do not use `APP_DATA_MODE=local` on Vercel. The local filesystem is not durable there. Audio uploads are capped by this app at 3 MB, below typical function request limits. No background worker or persistent WebSocket is required.
 
 Review current Vercel plan terms for the intended use. A personal prototype and a commercial deployment are not interchangeable plan assumptions.
+## Updated repository
+
+The factory workflow version is published separately as `elprofessor-15/meesho-c2m-factory-launchpad`. The earlier repository is preserved. Local source remains in `Meesho_Prototype`; `.env.local` is ignored and is not pushed. Use `npm run dev` from this folder and open `http://localhost:3000`. No Vercel deployment was performed for this update.

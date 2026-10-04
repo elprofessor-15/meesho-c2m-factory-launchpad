@@ -29,3 +29,8 @@ The model may prepare an action. A separate UI confirmation calls the confirmati
 ## Providers
 
 Gemini is the default text and speech provider; Groq is the primary transcription provider. Provider order is configured using server environment variables. The app reports local application caps rather than estimating remaining third-party quota. See [VOICE_TEST_PLAN.md](VOICE_TEST_PLAN.md).
+## Factory workflow extension
+
+`src/lib/launch.ts` contains shared batch grouping, readiness and commitment calculations. `src/components/factory.tsx` renders the batch workspace, activation contact and commitment review. All writes use the existing workspace repository. New optional operating-plan, commitment-history and workload fields are backwards compatible with existing local and hosted JSON workspaces; no destructive migration or demo reset is required.
+
+Batch confirmations snapshot every order version. Confirmation validates the entire batch before mutation. Commitment confirmations re-evaluate the policy and operating-plan version. The legacy pilot tool also enforces readiness and safe quantities. Seller product IDs and exact SKU order filtering are checked server-side.
