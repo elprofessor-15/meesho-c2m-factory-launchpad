@@ -31,6 +31,7 @@
 - No authorised Meesho seller, courier, payment, or telephony integration is present. No live bookings or calls occur.
 - Supabase currently stores a versioned JSON workspace per authenticated user, not the full normalized business schema. Production memberships/roles and executive access controls are not complete; the view switch is demo-only.
 - The fixture set and deterministic scenario engine are synthetic and uncalibrated. Programme outcome metrics and forecast accuracy are not validated.
+- ElevenLabs Free Scribe STT can be enabled with an explicit flag; Free-tier TTS with library voices is not API-accessible on this account (live `paid_plan_required`). Gemini handles TTS. No ElevenLabs paid TTS fallback is enabled.
 - The full production hardening, native-speaker localisation review for Hindi and other Indian languages, broad browser/audio device matrix, and full normalized migration set remain future work.
 
 ## Latest local checks

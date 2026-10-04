@@ -3,6 +3,26 @@ import {seed} from '../src/lib/fixtures';
 import {available,filterOrders,money,summary} from '../src/lib/services';
 import {forecast} from '../src/lib/forecast/engine';
 import {confirm,prepare} from '../src/lib/assistant/actions';
+import {responseLanguage} from '../src/lib/i18n';
+import {assertFreeElevenLabsAccount} from '../src/lib/providers/elevenlabs-free';
+
+describe('voice language and free provider limits',()=>{
+  it('uses the transcribed Hindi language even when the interface is English',()=>{
+    expect(responseLanguage('Aaj kitne orders bhejne hain?','en','hin')).toBe('hi');
+  });
+
+  it('detects Hindi text and retains the selected language for English speech',()=>{
+    expect(responseLanguage('आज के ऑर्डर बताइए','en')).toBe('hi');
+    expect(responseLanguage('How many orders are due?','hi')).toBe('hi');
+  });
+
+  it('permits only Free-tier accounts with overage disabled for Scribe STT fallback',()=>{
+    const account={tier:'free',status:'free',character_count:8276,character_limit:10000,max_credit_limit_extension:0};
+    expect(()=>assertFreeElevenLabsAccount(account)).not.toThrow();
+    expect(()=>assertFreeElevenLabsAccount({...account,max_credit_limit_extension:1000})).toThrow(/overage is enabled/);
+    expect(()=>assertFreeElevenLabsAccount({...account,tier:'starter',status:'active'})).toThrow(/Free account/);
+  });
+});
 
 describe('seller business services',()=>{
   it('keeps today summary counts consistent with the filtered order records',()=>{

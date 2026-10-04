@@ -78,3 +78,34 @@ test('microphone denial preserves the typed assistant path and mobile has no pag
   const dimensions=await page.evaluate(()=>({width:document.documentElement.clientWidth,scroll:document.documentElement.scrollWidth}));
   expect(dimensions.scroll).toBeLessThanOrEqual(dimensions.width);
 });
+
+test('a Hindi voice transcript drives Hindi assistant and speech language',async({page})=>{
+  await page.addInitScript(()=>{
+    Object.defineProperty(navigator,'mediaDevices',{configurable:true,value:{getUserMedia:async()=>new MediaStream()}});
+    class TestMediaRecorder {
+      static isTypeSupported(){return true;}
+      state='inactive';
+      mimeType='audio/webm;codecs=opus';
+      ondataavailable:((event:{data:Blob})=>void)|null=null;
+      onstop:(()=>void)|null=null;
+      onerror:(()=>void)|null=null;
+      constructor(){}
+      start(){this.state='recording';setTimeout(()=>this.ondataavailable?.({data:new Blob(['audio'],{type:this.mimeType})}),5);}
+      stop(){if(this.state==='recording'){this.state='inactive';this.onstop?.();}}
+    }
+    Object.defineProperty(window,'MediaRecorder',{configurable:true,value:TestMediaRecorder});
+  });
+  let requestedLanguage='';
+  await page.route('**/api/stt',route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({text:'Aaj kitne orders bhejne hain?',language:'hin',provider:'elevenlabs'})}));
+  await page.route('**/api/assistant',async route=>{requestedLanguage=route.request().postDataJSON().language;await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({text:'आज 4 ऑर्डर भेजने हैं।',spoken:'आज 4 ऑर्डर भेजने हैं।',language:'hi',provider:'mock',records:[]})});});
+  await page.setViewportSize({width:390,height:844});
+  await page.goto('/today');
+  await page.getByRole('button',{name:'Ask Launchpad'}).click();
+  await page.getByRole('button',{name:'Record'}).click();
+  await expect(page.locator('.voice-status')).toContainText('Listening');
+  await page.getByRole('button',{name:'Stop and send'}).click();
+  await expect(page.locator('.voice-controls textarea')).toHaveValue('Aaj kitne orders bhejne hain?');
+  await page.locator('.voice-controls button.primary').click();
+  await expect(page.locator('.message.assistant-message').last()).toContainText('आज 4 ऑर्डर');
+  expect(requestedLanguage).toBe('hi');
+});
