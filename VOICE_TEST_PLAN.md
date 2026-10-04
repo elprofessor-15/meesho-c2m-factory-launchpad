@@ -9,7 +9,7 @@ The client requests microphone permission, selects a browser-supported MediaReco
 - Groq transcription uses `whisper-large-v3-turbo` by default and preserves the input language. `whisper-large-v3` can be configured.
 - Gemini speech defaults to `gemini-3.8-flash-lite-tts`. The current official Gemini speech documentation specifies WAV for a unary audio response; the implementation returns the provider MIME type without wrapping an existing WAV header.
 - ElevenLabs Scribe v2 is an optional Free-tier STT fallback. Current official API pricing lists 4.5 hours of included monthly batch STT; the app enables it only with `ENABLE_ELEVENLABS_FREE_TIER=true` and checks Free status with usage-based overage disabled before sending audio. The account's own allowance remains authoritative, including for usage outside this app. ElevenLabs Free API TTS with library voices was live-tested and returned HTTP 402 `paid_plan_required`; no paid TTS request is made. Gemini remains cloud TTS.
-- The text assistant defaults to `gemini-2.5-flash`; a configured Groq fallback may be used. Tool schemas are allowlisted and writes remain preview-only until confirmation.
+- The text assistant defaults to `gemini-3.8-flash`, the current stable Gemini Flash model; a configured Groq fallback may be used. Tool schemas are allowlisted and writes remain preview-only until confirmation.
 
 ## Repeatable local checks
 

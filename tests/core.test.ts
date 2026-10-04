@@ -2,6 +2,7 @@ import {describe,expect,it} from 'vitest';
 import {seed} from '../src/lib/fixtures';
 import {available,filterOrders,money,summary} from '../src/lib/services';
 import {forecast} from '../src/lib/forecast/engine';
+import {forecastChartData} from '../src/lib/forecast/chart';
 import {confirm,prepare} from '../src/lib/assistant/actions';
 import {responseLanguage} from '../src/lib/i18n';
 import {assertFreeElevenLabsAccount} from '../src/lib/providers/elevenlabs-free';
@@ -79,6 +80,34 @@ describe('seller business services',()=>{
       expect(first.series.every(day=>day.p10<=day.p50&&day.p50<=day.p90)).toBe(true);
       expect(first.series.every((day,index)=>index===0||day.c50>=first.series[index-1].c50)).toBe(true);
     }
+  });
+
+  it('plots cumulative actual units from the same baseline as forecast quantiles',()=>{
+    const state=seed();
+    const product=state.products[0];
+    const plan=forecast({...product,horizon:7},state.observations);
+    expect(plan.status).toBe('ready');
+    if(plan.status!=='ready')return;
+    const chart=forecastChartData(state.observations,product.id,plan.series,7,true);
+    const historical=chart.filter(point=>point.day<0);
+    const start=chart.find(point=>point.day===0);
+    const firstForecast=chart.find(point=>point.day===1);
+    const historicalTotal=state.observations.filter(observation=>observation.sku===product.id&&observation.day<0).sort((a,b)=>a.day-b.day).slice(-14).reduce((total,observation)=>total+observation.units,0);
+    expect(historical).toHaveLength(14);
+    expect(historical.at(-1)?.actual).toBe(historicalTotal);
+    expect(start?.median).toBe(historicalTotal);
+    expect(firstForecast?.median).toBe(historicalTotal+plan.series[0].c50);
+    expect(firstForecast?.band?.[0]).toBeLessThanOrEqual(firstForecast?.median??0);
+    expect(firstForecast?.band?.[1]).toBeGreaterThanOrEqual(firstForecast?.median??0);
+  });
+
+  it('creates synthetic history with plausible visit, purchase and unit ordering',()=>{
+    const state=seed();
+    const observations=state.observations.filter(observation=>observation.sku==='SKU-101');
+    expect(observations).toHaveLength(90);
+    expect(observations.every(observation=>observation.visits>=observation.purchases&&observation.purchases<=observation.units)).toBe(true);
+    expect(observations.every(observation=>observation.available||(observation.purchases===0&&observation.units===0))).toBe(true);
+    expect(new Set(observations.slice(-14).map(observation=>observation.visits)).size).toBeGreaterThan(6);
   });
 });
 

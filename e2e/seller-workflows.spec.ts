@@ -109,3 +109,23 @@ test('a Hindi voice transcript drives Hindi assistant and speech language',async
   await expect(page.locator('.message.assistant-message').last()).toContainText('आज 4 ऑर्डर');
   expect(requestedLanguage).toBe('hi');
 });
+
+test('demand chart shows complete actual and forecast series in both modes',async({page})=>{
+  await page.setViewportSize({width:1440,height:1000});
+  await page.goto('/demand?sku=SKU-101');
+  await expect(page.getByText('Cumulative actuals')).toBeVisible();
+  const cumulative=await page.evaluate(()=>({
+    axis:[...document.querySelectorAll('.forecast-chart svg text')].map(node=>node.textContent),
+    lines:[...document.querySelectorAll('.recharts-line-curve')].map(node=>({length:node.getAttribute('d')?.length??0,dash:node.getAttribute('stroke-dasharray')})),
+    band:document.querySelector('.recharts-area-area')?.getAttribute('d')?.length??0,
+  }));
+  expect(cumulative.axis).toContain('-14');
+  expect(cumulative.lines.length).toBeGreaterThanOrEqual(2);
+  expect(cumulative.lines.every(line=>line.length>100&&!line.dash?.includes('px'))).toBe(true);
+  expect(cumulative.band).toBeGreaterThan(100);
+  await page.getByRole('button',{name:'Daily'}).click();
+  await expect(page.getByText('Daily sample actuals')).toBeVisible();
+  const daily=await page.locator('.recharts-line-curve').evaluateAll(paths=>paths.map(path=>path.getAttribute('d')?.length??0));
+  expect(daily.length).toBeGreaterThanOrEqual(2);
+  expect(daily.every(length=>length>100)).toBe(true);
+});
