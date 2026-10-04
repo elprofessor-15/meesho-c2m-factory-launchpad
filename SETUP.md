@@ -16,6 +16,8 @@
 - **Optional OpenRouter fallback**: a free-model route is configured in `.env.example`. It is only attempted if the provider list includes it and its key exists. Do not use a paid model for the free-tier demo.
 - **Optional ElevenLabs fallback**: this integration can consume account credits. It is disabled unless `ELEVENLABS_API_KEY` and a voice ID are configured. Do not enable it unless the account allowance and pricing are understood.
 
+ElevenLabs speech fallback is blocked by default, even when its key is configured. Set `ALLOW_PAID_SPEECH_FALLBACK=true` only after explicitly choosing to allow that provider to consume your account allowance.
+
 Configured credentials are not proof of live account entitlement. This prototype's model quota caps are local application limits, not provider quota estimates.
 
 ## Hosted Supabase mode
