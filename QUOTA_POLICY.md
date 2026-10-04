@@ -2,8 +2,8 @@
 
 Application caps are separate from provider plans and are not claims about remaining provider allowance.
 
-- 1,000 assistant turns per user per UTC day.
-- 5,000 model requests per project per UTC day.
+- 5,000 assistant turns per user per UTC day.
+- 10,000 model requests per project per UTC day.
 - 14,400 recorded/transcribed speech seconds per user per UTC day.
 - 300 cloud speech replies per project per UTC day.
 
