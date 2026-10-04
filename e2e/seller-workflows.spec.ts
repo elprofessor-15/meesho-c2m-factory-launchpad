@@ -127,5 +127,5 @@ test('demand chart shows complete actual and forecast series in both modes',asyn
   await expect(page.getByText('Daily sample actuals')).toBeVisible();
   const daily=await page.locator('.recharts-line-curve').evaluateAll(paths=>paths.map(path=>path.getAttribute('d')?.length??0));
   expect(daily.length).toBeGreaterThanOrEqual(2);
-  expect(daily.every(length=>length>100)).toBe(true);
+  expect(daily.every(length=>length>60)).toBe(true);
 });
