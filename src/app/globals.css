@@ -569,5 +569,6 @@ dialog form .button-row { justify-content: flex-end; }
  .header-actions {flex:1 1 280px;justify-content:flex-end;}
  .header-actions .factory-toggle {flex:0 1 auto;}
  .header-actions .voice-mode {flex:0 1 auto;}
- .topbar .breadcrumb strong {max-width:85px;overflow-wrap:anywhere;}
+ .topbar .breadcrumb {flex:0 0 auto;}
+ .topbar .breadcrumb > span,.topbar .breadcrumb > strong {display:none;}
 }
