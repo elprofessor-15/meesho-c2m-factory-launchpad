@@ -10,7 +10,7 @@ import {assistant} from '../src/lib/assistant/orchestrator';
 beforeEach(()=>{vi.resetAllMocks();const state=seed('2026-10-04');mocks.read.mockResolvedValue(state);mocks.mutate.mockImplementation(async(_s,fn)=>fn(state));mocks.quota.mockResolvedValue(undefined);});
 it('recovers from Gemini failure with Groq tool use and grounded answer',async()=>{
  mocks.model.mockRejectedValueOnce(new Error('Provider quota')).mockResolvedValueOnce({calls:[{name:'list_orders',args:{due:'today'}}],text:'',usage:{provider:'groq'}}).mockResolvedValueOnce({calls:[],text:'Four orders are due today.',usage:{provider:'groq'}});
- const reply=await assistant({id:'test'},'Orders today?','en');expect(reply.provider).toBe('groq');expect(reply.text).toBe('Four orders are due today.');expect(reply.records).toMatchObject([{tool:'list_orders',total:4}]);expect(mocks.model.mock.calls.map(c=>c[0])).toEqual(['gemini','groq','groq']);
+ const reply=await assistant({id:'test'},'Explain dispatch priorities','en');expect(reply.provider).toBe('groq');expect(reply.text).toBe('Four orders are due today.');expect(reply.records).toMatchObject([{tool:'list_orders',total:4}]);expect(mocks.model.mock.calls.map(c=>c[0])).toEqual(['gemini','groq','groq']);
 });
 it('tries the next provider when a model returns an empty response',async()=>{
  mocks.model.mockResolvedValueOnce({calls:[],text:'',usage:{}}).mockResolvedValueOnce({calls:[],text:'Please choose a product.',usage:{provider:'groq'}});

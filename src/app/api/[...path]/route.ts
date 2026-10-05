@@ -1,14 +1,15 @@
 import {operatingPlan} from '@/lib/launch';
-import {NextRequest,NextResponse} from 'next/server';
+import {NextRequest,NextResponse,after} from 'next/server';
 import {z} from 'zod';
 import {session,read,mutate,log,quota,quotaRetryAfterSeconds} from '@/lib/server/repository';
 import {configuration,env} from '@/lib/server/env';
 import {prepare,confirm} from '@/lib/assistant/actions';
-import {assistant,recordUsage} from '@/lib/assistant/orchestrator';
+import {assistant,recordUsages,AssistantEvent} from '@/lib/assistant/orchestrator';
 import {transcribe,speak,elevenLabsSubscription,ProviderError} from '@/lib/providers/ai';
 import {assertFreeElevenLabsAccount} from '@/lib/providers/elevenlabs-free';
 import {AppQuotaError,QuotaStorageError,speechQuotaSeconds} from '@/lib/server/quota-policy';
 import {seed} from '@/lib/fixtures';
+import {Usage} from '@/lib/types';
 export const runtime='nodejs';export const maxDuration=60;
 export async function GET(req:NextRequest){try{const s=await session();if(req.nextUrl.pathname.endsWith('/config'))return NextResponse.json(configuration());return NextResponse.json(await read(s),{headers:{'Cache-Control':'no-store'}});}catch(e){return failure(e,req.nextUrl.pathname.endsWith('/tts')&&process.env.TTS_BROWSER_FALLBACK!=='false');}}
 function failure(e:unknown,browserFallback=false){
@@ -27,12 +28,38 @@ export async function POST(req:NextRequest){try{
   if(!trustedHost||parsedOrigin.host!==trustedHost||parsedOrigin.protocol!==`${trustedProtocol}:`)throw new Error('Origin not allowed');
  }
  const s=await session();const path=req.nextUrl.pathname.split('/').at(-1)!;
- if(path==='stt'){if(Number(req.headers.get('content-length')??0)>3100000)throw new Error('Audio must be under 3 MB.');const f=await req.formData();const file=f.get('audio');const duration=Number(f.get('duration'));if(!(file instanceof File)||file.size===0||file.size>3000000||!/^audio\/(webm|mp4|mpeg|wav|ogg|x-wav)(;.*)?$/.test(file.type))throw new Error('Use a supported audio recording under 3 MB.');if(!Number.isFinite(duration)||duration<=0||duration>46)throw new Error('Recording must be 45 seconds or less.');const reservedSeconds=speechQuotaSeconds(duration);await quota(s,'stt',reservedSeconds);for(const provider of configuration().stt){const start=Date.now();try{if(provider==='elevenlabs'&&env().ENABLE_ELEVENLABS_FREE_TIER==='true')assertFreeElevenLabsAccount(await elevenLabsSubscription());const result=await transcribe(provider,file);if(result.seconds>46)throw new Error('Audio exceeds 45 seconds');if(!result.text?.trim())throw new Error('No speech detected. Try again in a quieter place.');const actualSeconds=speechQuotaSeconds(duration,result.seconds||duration);if(actualSeconds>reservedSeconds)await quota(s,'stt',actualSeconds-reservedSeconds);await recordUsage(s,{provider,model:result.model,kind:'stt',seconds:result.seconds||duration,latency:Date.now()-start});return NextResponse.json({text:result.text,provider,language:result.language});}catch(e){if(e instanceof AppQuotaError||e instanceof QuotaStorageError)throw e;await recordUsage(s,{provider,kind:'stt',latency:Date.now()-start,error:e instanceof Error?e.message:'Transcription failed'});}}throw new Error('Transcription unavailable. Configure Groq or ElevenLabs, or type your message.');}
- const b=await req.json();if(path==='tts'){const {text,language}=z.object({text:z.string().min(1).max(600),language:z.string().max(30).default('en')}).parse(b);await quota(s,'tts');for(const provider of configuration().tts.filter(p=>p!=='browser')){try{const audio=await speak(provider,text,language);await recordUsage(s,{provider,model:audio.model,kind:'tts',characters:text.length});return new Response(new Uint8Array(audio.bytes),{headers:{'Content-Type':audio.mime,'X-Speech-Provider':provider}});}catch(e){await recordUsage(s,{provider,kind:'tts',characters:text.length,error:e instanceof Error?e.message:'Speech failed'});}}return NextResponse.json({browserFallback:process.env.TTS_BROWSER_FALLBACK!=='false',error:'Cloud speech unavailable'},{status:503});}
- if(path==='assistant'){const x=z.object({message:z.string().min(1).max(2000),language:z.string().max(30).default('en')}).parse(b);return NextResponse.json(await assistant(s,x.message,x.language));}
+ if(path==='stt'){
+  if(Number(req.headers.get('content-length')??0)>3100000)throw new Error('Audio must be under 3 MB.');
+  const form=await req.formData(),file=form.get('audio'),duration=Number(form.get('duration'));
+  if(!(file instanceof File)||!file.size||file.size>3000000||!/^audio\/(webm|mp4|mpeg|wav|ogg|x-wav)(;.*)?$/.test(file.type))throw new Error('Use a supported recording under 3 MB.');
+  if(!Number.isFinite(duration)||duration<=0||duration>46)throw new Error('Recording must be 45 seconds or less.');
+  const reserved=speechQuotaSeconds(duration);await quota(s,'stt',reserved);
+  const usage:Partial<Usage>[]=[];after(()=>recordUsages(s,usage));
+  for(const provider of configuration().stt){const started=Date.now();try{
+   if(provider==='elevenlabs'&&env().ENABLE_ELEVENLABS_FREE_TIER==='true')assertFreeElevenLabsAccount(await elevenLabsSubscription());
+   const result=await transcribe(provider,file);if(result.seconds>46)throw new Error('Audio exceeds 45 seconds');if(!result.text?.trim())throw new Error('No speech detected.');
+   const actual=speechQuotaSeconds(duration,result.seconds||duration);if(actual>reserved)await quota(s,'stt',actual-reserved);
+   usage.push({provider,model:result.model,kind:'stt',seconds:result.seconds||duration,latency:Date.now()-started});return NextResponse.json({text:result.text,provider,language:result.language});
+  }catch(error){if(error instanceof AppQuotaError||error instanceof QuotaStorageError)throw error;usage.push({provider,kind:'stt',latency:Date.now()-started,error:error instanceof Error?error.message:'Transcription failed'});}}
+  return NextResponse.json({error:'Transcription is unavailable. Try again shortly, or type your message.'},{status:503,headers:{'Retry-After':'60'}});
+ }
+ const b=await req.json();
+ if(path==='tts'){
+  const {text,language}=z.object({text:z.string().trim().min(1).max(600),language:z.string().max(30).default('en')}).parse(b);await quota(s,'tts');
+  const usage:Partial<Usage>[]=[];after(()=>recordUsages(s,usage));
+  for(const provider of configuration().tts.filter(p=>p!=='browser')){const started=Date.now();try{
+   const audio=await speak(provider,text,language);if(!audio.bytes.length)throw new Error('No audio received');usage.push({provider,model:audio.model,kind:'tts',characters:text.length,latency:Date.now()-started});
+   return new Response(new Uint8Array(audio.bytes),{headers:{'Content-Type':audio.mime,'X-Speech-Provider':provider,'Cache-Control':'no-store'}});
+  }catch(error){usage.push({provider,kind:'tts',characters:text.length,latency:Date.now()-started,error:error instanceof Error?error.message:'Speech failed'});}}
+  return NextResponse.json({browserFallback:process.env.TTS_BROWSER_FALLBACK!=='false',error:'Cloud speech is unavailable. Your text answer is ready.'},{status:503,headers:{'Retry-After':'60'}});
+ }
+ if(path==='assistant'){const x=z.object({message:z.string().min(1).max(2000),language:z.string().max(30).default('en')}).parse(b);if(!req.headers.get('accept')?.includes('application/x-ndjson'))return NextResponse.json(await assistant(s,x.message,x.language));
+  const controller=new AbortController(),signal=AbortSignal.any([req.signal,controller.signal]);const encoder=new TextEncoder();
+  const stream=new ReadableStream<Uint8Array>({async start(output){const emit=(event:AssistantEvent)=>{if(!signal.aborted)output.enqueue(encoder.encode(JSON.stringify(event)+'\n'));};try{const reply=await assistant(s,x.message,x.language,{onEvent:emit,signal});emit({type:'done',reply});}catch(error){emit({type:'error',error:error instanceof Error?error.message:'The connection was interrupted. Please try again.'});}finally{if(!signal.aborted)output.close();}},cancel(){controller.abort();}});
+  return new Response(stream,{headers:{'Content-Type':'application/x-ndjson; charset=utf-8','Cache-Control':'no-store, no-transform','X-Accel-Buffering':'no'}});}
  if(path==='prepare')return NextResponse.json(await mutate(s,st=>prepare(st,s.id,b)));
  if(path==='confirm'){const {id}=z.object({id:z.string().uuid()}).parse(b);return NextResponse.json({message:await mutate(s,st=>confirm(st,s.id,id))});}
- if(path==='cancel'){await mutate(s,st=>{const a=st.actions.find(a=>a.id===b.id&&a.user===s.id);if(a&&a.status==='pending')a.status='cancelled';});return NextResponse.json({ok:true});}
+ if(path==='cancel'){const result=await mutate(s,st=>{const a=st.actions.find(a=>a.id===b.id&&a.user===s.id);if(!a)throw new Error('Action not found');if(a.status==='pending')a.status='cancelled';return{status:a.status,message:a.status==='done'?a.result:'Update cancelled. No changes were made.'};});return NextResponse.json(result);}
  if(path==='operating-plan'){const x=z.object({version:z.number().int(),contact:z.string().min(2).max(100),packingOwner:z.string().max(100),packingCapacity:z.number().int().min(0).max(10000),minutesPerParcel:z.number().min(.1).max(120),ownerMinutes:z.number().int().min(0).max(1440),catalogueChecked:z.boolean(),packingChecked:z.boolean(),pickupChecked:z.boolean(),firstOrderChecked:z.boolean(),firstPayoutChecked:z.boolean(),independent:z.boolean(),seasonalConstraint:z.string().max(300)}).parse(b);await mutate(s,st=>{if(operatingPlan(st).version!==x.version)throw new Error('Operating plan changed. Refresh first.');st.operatingPlan={...x,version:x.version+1};log(st,'Operating ownership and activation checklist updated');});}
  else if(path==='work-session'){const x=z.object({ownerMinutes:z.number().int().min(0).max(1440),workerMinutes:z.number().int().min(0).max(10000),errors:z.number().int().min(0).max(10000),note:z.string().min(3).max(500)}).parse(b);await mutate(s,st=>{st.workSessions??=[];st.workSessions.unshift({...x,id:crypto.randomUUID(),date:st.date});log(st,'Daily operating workload recorded');});}
  else if(path==='onboarding'){const x=z.object({step:z.number().int().min(0).max(6),fields:z.record(z.string(),z.string().max(300000))}).parse(b);await mutate(s,st=>{st.onboarding={...st.onboarding,...x.fields};st.step=x.step;log(st,'Onboarding progress saved');});}

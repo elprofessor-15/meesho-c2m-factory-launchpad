@@ -17,3 +17,13 @@ The client requests microphone permission, selects a browser-supported MediaReco
 
 For live verification, follow [SETUP.md](SETUP.md), then check STT, LLM, and TTS separately. In this workspace, live smoke tests returned a real Gemini WAV response, Groq transcription of generated audio, and a live Hindi-answer Groq turn. Current ElevenLabs status was Free with overage disabled; a live Free-tier TTS request was refused by ElevenLabs before charging. Automated browser coverage checks Hindi transcript-language routing. These checks do not certify remaining provider quotas, speech quality across languages, or broad browser support.
 Reliability regression checks cover SQL errors versus real quota exhaustion, Gemini-to-Groq LLM fallback, Groq-to-ElevenLabs STT fallback, Gemini-to-ElevenLabs TTS fallback, 429/503 device playback, cloud cooldown, and cancellation while a speech response is pending. Live validation also transcribed a Gemini Hindi WAV through Groq.
+
+## Faster conversational work
+
+Common daily order counts, low stock, stock totals, payouts and exact packing commands use workspace records directly. These answers do not wait for a model. Their history is persisted with the existing version checks. General explanations retrieve records first, then stream the final answer using NDJSON. Only the read-only explanation is streamed; action preparation returns a stored review, and a separate confirmation executes it.
+
+The client starts speech at the first complete sentence. Fast device speech uses a matching installed voice; cloud mode prepares the next segment while the current one plays. At most 600 characters are spoken automatically, in at most two segments. Cloud requests still count against the existing application and provider allowances. Recording auto-send is optional and does not authorize updates.
+
+The interviewer reference starts speech alongside visible text. Launchpad now uses actual streamed provider deltas rather than adding an artificial word-reveal delay. Speech/transcription usage logging runs after the response; quota checks and confirmed changes remain synchronous.
+
+Regression checks also cover Hindi typed in Latin letters, multi-order confirmation, negated commands, unknown references, stale reviews, inline confirmation errors and saved/cancelled feedback. A controlled stream test verifies audible speech before the final answer event. Test real device voices separately, because headless-browser voices are mocked.

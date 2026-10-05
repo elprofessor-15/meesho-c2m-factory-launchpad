@@ -2,7 +2,7 @@ import {test,expect} from '@playwright/test';
 
 for(const failure of [429,503])test(`cloud speech ${failure} uses Hindi device speech and avoids repeated cloud requests`,async({page})=>{
  await page.addInitScript(()=>{
-  localStorage.setItem('lp-read-aloud','true');
+  localStorage.setItem('lp-read-aloud','true');localStorage.setItem('lp-speech-mode','cloud');
   const spoken:string[]=[];
   Object.defineProperty(window,'__spoken',{value:spoken});
   Object.defineProperty(window,'SpeechSynthesisUtterance',{value:class {text:string;voice:unknown;lang='';onend:(()=>void)|null=null;constructor(text:string){this.text=text;}}});
@@ -21,17 +21,17 @@ for(const failure of [429,503])test(`cloud speech ${failure} uses Hindi device s
  }
  expect(cloudRequests).toBe(1);
  expect(await page.evaluate(()=>Reflect.get(window,'__spoken'))).toEqual(['hi-IN','hi-IN']);
- await expect(page.locator('.voice-controls')).toContainText('cloud speech recovers');
+ await expect(page.locator('.voice-controls')).toContainText('voice connection recovers');
 });
 
 test('pending speech does not start after read-aloud is turned off',async({page})=>{
- await page.addInitScript(()=>localStorage.setItem('lp-read-aloud','true'));
+ await page.addInitScript(()=>{localStorage.setItem('lp-read-aloud','true');localStorage.setItem('lp-speech-mode','cloud');});
  let release!:()=>void;const held=new Promise<void>(resolve=>release=resolve);
  await page.route('**/api/tts',async route=>{await held;await route.fulfill({status:503,contentType:'application/json',body:'{"browserFallback":true}'});});
  await page.route('**/api/assistant',route=>route.fulfill({status:200,contentType:'application/json',body:'{"text":"Four orders","spoken":"Four orders","language":"en","provider":"test"}'}));
  await page.goto('/today');await page.getByRole('button',{name:'Ask Launchpad'}).click();
  await page.getByRole('textbox',{name:'Type a question'}).fill('Orders today?');
- await page.locator('.voice-controls button.primary').click();await expect(page.locator('.voice-status')).toContainText('Speaking');
+ const pendingSpeech=page.waitForRequest(request=>request.url().endsWith('/api/tts'));await page.locator('.voice-controls button.primary').click();await pendingSpeech;
  await page.getByLabel('Read answers aloud').uncheck();release();
  await expect(page.locator('.voice-status')).toContainText('Idle');
  await expect(page.locator('.voice-controls .small-note')).toHaveCount(0);

@@ -103,7 +103,7 @@ test('a Hindi voice transcript drives Hindi assistant and speech language',async
   await page.getByRole('button',{name:'Ask Launchpad'}).click();
   await page.getByRole('button',{name:'Record'}).click();
   await expect(page.locator('.voice-status')).toContainText('Listening');
-  await page.getByRole('button',{name:'Stop and send'}).click();
+  await page.getByRole('button',{name:'Stop and review'}).click();
   await expect(page.locator('.voice-controls textarea')).toHaveValue('Aaj kitne orders bhejne hain?');
   await page.locator('.voice-controls button.primary').click();
   await expect(page.locator('.message.assistant-message').last()).toContainText('आज 4 ऑर्डर');

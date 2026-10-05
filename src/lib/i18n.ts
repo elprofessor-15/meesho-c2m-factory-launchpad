@@ -26,5 +26,6 @@ export function responseLanguage(text:string,selected:string,detected?:string|nu
 	const detectedLanguage=normalizeLanguageCode(detected);
 	if(detectedLanguage)return detectedLanguage;
 	if(/[\u0900-\u097f]/u.test(text))return 'hi';
+	if((text.toLowerCase().match(/\b(aaj|kitne|kitni|kitna|bhejne|bhejo|maine|taiyar|karo|bacha|bache|kab|aayega|saktee|sakti|hain|hai|dikhao|batao)\b/g)??[]).length>=2)return 'hi';
 	return languages.some(([code])=>code===selected)?selected:'en';
 }

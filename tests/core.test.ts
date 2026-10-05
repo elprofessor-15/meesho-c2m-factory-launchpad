@@ -27,6 +27,7 @@ describe('voice language and free provider limits',()=>{
 
   it('detects Hindi text and retains the selected language for English speech',()=>{
     expect(responseLanguage('आज के ऑर्डर बताइए','en')).toBe('hi');
+    expect(responseLanguage('Aaj kitne orders bhejne hain?','en')).toBe('hi');
     expect(responseLanguage('How many orders are due?','hi')).toBe('hi');
   });
 

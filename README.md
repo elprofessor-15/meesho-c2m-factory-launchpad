@@ -1,12 +1,21 @@
 # C2M Launchpad
 
-An independent case-competition prototype for manufacturer onboarding, seller operations, sample-based demand planning, and shared support workflows. It uses fictional records and does not connect to live Meesho seller, courier, or payment systems.
+**[Open the live prototype](https://meesho-c2m-factory-launchpad.vercel.app/today)**
 
-Persistent notice in the app: **Independent prototype. Sample business data.**
+A manufacturer workspace for daily orders, packing, stock, payouts and the next production decision. Built for the Meesho C2M case competition. Business records are fictional; courier, payment and Meesho seller systems are not connected.
+
+## What you can try
+
+- **Factory Mode:** five daily destinations, with packing batches, labels and a clear work queue.
+- **Ask Launchpad:** type or speak in your chosen language. Common order, stock and payout questions use workspace records directly. Longer answers appear progressively, with speech starting at the first complete sentence.
+- **Voice updates:** say “I have prepared orders LP 8042 and LP 8047” or “Set SKU-101 stock to 50”. Review the exact update and press **Confirm update**. Packing does not record courier handover.
+- **Speech controls:** choose a fast device voice or a cloud voice. Stop playback, replay a reply, or optionally send recordings immediately after transcription. A matching installed voice is needed for device speech.
+- **Production decisions:** compare demand evidence, operating readiness, cash exposure and a bounded stock commitment. No minimum orders are promised.
+- **Support:** a named activation contact, callback and visit requests, and a first-cycle checklist. The SMS simulator demonstrates constrained reply handling; it does not send messages.
 
 ## Run locally
 
-Requirements: Node.js 24 and npm.
+Use Node.js 24 and npm.
 
 ```sh
 npm install
@@ -14,9 +23,20 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). The default `APP_DATA_MODE=local` stores each local-preview workspace under `.local-data/`; this mode is for development only and is not durable on Vercel.
+Open [localhost:3000](http://localhost:3000). Paste credentials into `.env.local` only:
 
-## Checks
+- `GROQ_API_KEY`: primary conversation service and transcription.
+- `GEMINI_API_KEY`: conversation fallback and cloud speech.
+- `ELEVENLABS_API_KEY`: optional transcription and speech fallback. The example uses a premade multilingual voice compatible with the Free account tested here.
+- `OPENROUTER_API_KEY`: optional additional conversation fallback using a free model.
+
+Device speech needs no API key. Provider accounts enforce their own quotas. Free ElevenLabs fallback checks Free status, disabled overage and remaining speech characters.
+
+Local mode stores workspaces in `.local-data`. For Vercel, use `APP_DATA_MODE=supabase`, enable anonymous sign-in and apply the migrations in `supabase/migrations` in order. Existing projects need migration `002` to repair the quota function without resetting counters.
+
+`SUPABASE_ACCESS_TOKEN`, if used to administer migrations, stays local. It is excluded from deployment uploads and environment synchronization. The running app does not require it.
+
+## Verification
 
 ```sh
 npm run typecheck
@@ -26,47 +46,15 @@ npm run test:e2e
 npm run build
 ```
 
-Playwright's Chromium browser is installed once with `npx playwright install chromium`. Browser tests use isolated local sessions and mock the assistant endpoint. Live Groq and Gemini checks must be performed separately; see [VOICE_TEST_PLAN.md](VOICE_TEST_PLAN.md).
+Install the browser once with `npx playwright install chromium`. Regression coverage includes streamed text and early speech, provider fallbacks, cancelled playback, ambiguous voice commands, atomic multi-order updates, stale confirmations and responsive layouts. Live provider checks are separate from mocked browser tests.
 
-## Configuration
+## Product and implementation notes
 
-Provider credentials belong in `.env.local`, never in source control or chat. See [SETUP.md](SETUP.md) for the exact provider setup and hosted-mode steps. The settings page reports configured provider names, not verified account quota or successful credentials.
+- [Setup](SETUP.md)
+- [Factory Mode and commitment rules](FACTORY_MODE.md)
+- [Voice testing and latency](VOICE_TEST_PLAN.md)
+- [Forecast methodology](FORECAST_METHODOLOGY.md)
+- [Architecture](ARCHITECTURE.md)
+- [Implementation boundaries](IMPLEMENTATION_STATUS.md)
 
-## Product map
-
-- `/today`: seller work queue and next production decision.
-- `/orders`, `/orders/[id]`: due filters, search, demo labels, and confirmed packing state.
-- `/catalogue`, `/inventory`, `/payments`: product edits, inventory controls, and sample settlement records.
-- `/demand`: deterministic scenario forecast with explicit assumptions.
-- `/onboarding`, `/support`: resumable business setup and saved support requests.
-- `/operations`: synthetic programme overview, manufacturer details, interventions, and support resolution.
-- `/settings`: provider readiness, demo scenarios, local usage events, and reset controls.
-
-## Implementation boundaries
-
-`src/lib/fixtures.ts` contains only fictional data. Business calculations live in `src/lib/services.ts` and `src/lib/forecast/engine.ts`. Provider credentials and calls stay in server-only modules. Writes are previewed and require a separate confirmation request.
-
-Hosted persistence currently stores a versioned JSON state document per authenticated user, plus atomic quota counters. It is not yet a normalized relational business schema, and the Seller/Operations switch remains a demo feature rather than a production role boundary. Review [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) before presenting or deploying.
-
-## Further reading
-
-- [SETUP.md](SETUP.md)
-- [ARCHITECTURE.md](ARCHITECTURE.md)
-- [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md)
-- [FORECAST_METHODOLOGY.md](FORECAST_METHODOLOGY.md)
-- [VOICE_TEST_PLAN.md](VOICE_TEST_PLAN.md)
-- [DEMO_SCRIPT.md](DEMO_SCRIPT.md)
-- [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md)
-## Factory operations update
-
-The new `/commitment` workspace separates demand evidence, physical readiness and the next bounded stock decision. Factory Mode reduces seller navigation to five daily destinations. Batch preparation groups exact SKU/variant/deadline work, exports packing lists and labels, and confirms all affected orders atomically. The named activation contact and first-cycle checklist make ownership explicit. Workload records measure owner time, worker time and errors without inventing a time-saving claim.
-
-See [FACTORY_MODE.md](FACTORY_MODE.md) for the decision rules, SMS simulator boundary and remaining validation requirements. The SMS simulator does not send messages; real carrier pickup and minimum orders are never promised.
-
-## Voice reliability repair
-
-Apply `supabase/migrations/002_fix_quota_ambiguity.sql` to existing projects. It repairs the `consume_quota` RPC without resetting counters. The original column/parameter collision produced a database error that was incorrectly reported as a daily limit. Database availability failures now return a separate 503 error; actual application limits return 429 with `Retry-After`.
-
-LLM requests move to the next configured provider on failure or empty responses. STT tries Groq then eligible ElevenLabs Free Scribe. TTS tries Gemini then eligible ElevenLabs Free speech, followed by a matching device voice. Free ElevenLabs API TTS requires a compatible premade voice; the Sarah voice in `.env.example` was tested in Hindi. Cloud speech failures preserve the text answer and introduce a cooldown to avoid repeated failed requests. Turning read-aloud off cancels pending playback. Device speech depends on an installed voice for the requested language.
-
-`SUPABASE_ACCESS_TOKEN` is a local administration credential for migrations. It is excluded from environment synchronization and deployment uploads. It is never required by the running app.
+The prototype uses isolated, versioned workspaces. Seller and Operations views demonstrate workflows; they are not production role authorization. Updates require a separate confirmation, expire after five minutes and reject stale records.
