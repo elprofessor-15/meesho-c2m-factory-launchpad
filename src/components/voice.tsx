@@ -30,9 +30,8 @@ export default function Voice({language,onClose,onAction,initial='',actionResult
  useEffect(()=>{
   if(!actionResult||seenResult.current===actionResult.id)return;
   const source=messages.find(message=>message.reply?.action?.id===actionResult.id);if(!source)return;seenResult.current=actionResult.id;
-  const l=source.reply?.language??language;let text=actionResult.message;
-  if(l==='hi'){if(actionResult.cancelled)text='अनुरोध रद्द कर दिया गया। कोई बदलाव नहीं हुआ।';else{const count=text.match(/^(\d+) orders marked packed/);if(count)text=`${count[1]} ऑर्डर पैक किए हुए दर्ज हो गए। कूरियर को सौंपना अभी बाकी है।`;}}
-  const reply:Reply={text,spoken:text,language:l==='hi'&&/^[\u0900-\u097f0-9]/u.test(text)?'hi':'en',provider:'Workspace'};
+  const l=source.reply?.language??language,text=translate(l,actionResult.message);
+  const reply:Reply={text,spoken:text,language:l,provider:'Workspace'};
   setMessages(rows=>[...rows,{id:crypto.randomUUID(),role:'assistant',text,reply}]);
   if(aloudRef.current){player.current?.start(reply.language,modeRef.current);player.current?.enqueue(text);player.current?.finish();}
   requestAnimationFrame(()=>{if(body.current)body.current.scrollTop=body.current.scrollHeight;});

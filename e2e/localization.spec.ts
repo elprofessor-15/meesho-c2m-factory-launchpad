@@ -55,3 +55,22 @@ test('tour completes and restores the route and Factory Mode without business mu
  await expect(page.locator('.tour-panel')).toHaveCount(0);
  await expect(page.getByRole('button',{name:'Product tour',exact:true})).toBeFocused();
 });
+
+test('a confirmed voice update is spoken in the selected regional language',async({page})=>{
+ await page.addInitScript(()=>{
+  localStorage.setItem('lp-language','ta');localStorage.setItem('lp-read-aloud','true');
+  const spoken:{text:string;lang:string}[]=[];Object.defineProperty(window,'__regionalSpeech',{value:spoken});
+  Object.defineProperty(window,'SpeechSynthesisUtterance',{value:class{text:string;lang='';onstart:(()=>void)|null=null;onend:(()=>void)|null=null;constructor(text:string){this.text=text;}}});
+  Object.defineProperty(window,'speechSynthesis',{value:{getVoices:()=>[{lang:'ta-IN',localService:true}],cancel:()=>{},addEventListener:()=>{},removeEventListener:()=>{},speak:(utterance:{text:string;lang:string;onstart?:()=>void;onend?:()=>void})=>{spoken.push({text:utterance.text,lang:utterance.lang});utterance.onstart?.();setTimeout(()=>utterance.onend?.(),10);}}});
+ });
+ await page.goto('/today');await page.locator('.header-actions .voice-mode').click();
+ await page.locator('.voice-controls textarea').fill('Set SKU-101 stock to 52');
+ await page.locator('.voice-controls button.primary').click();
+ await expect(page.locator('dialog')).toContainText('52');
+ await page.locator('dialog .button-row button.primary').click();
+ await expect(page.locator('dialog')).not.toBeVisible();
+ await expect.poll(()=>page.evaluate(()=>Reflect.get(window,'__regionalSpeech').length)).toBeGreaterThanOrEqual(2);
+ const acknowledgement=await page.evaluate(()=>Reflect.get(window,'__regionalSpeech').at(-1));
+ expect(acknowledgement.lang).toBe('ta-IN');expect(acknowledgement.text).toMatch(languageScripts.ta);
+ expect(acknowledgement.text).toContain('52');expect(acknowledgement.text).not.toContain('Stock updated');
+});
