@@ -34,3 +34,9 @@ Gemini is the default text and speech provider; Groq is the primary transcriptio
 `src/lib/launch.ts` contains shared batch grouping, readiness and commitment calculations. `src/components/factory.tsx` renders the batch workspace, activation contact and commitment review. All writes use the existing workspace repository. New optional operating-plan, commitment-history and workload fields are backwards compatible with existing local and hosted JSON workspaces; no destructive migration or demo reset is required.
 
 Batch confirmations snapshot every order version. Confirmation validates the entire batch before mutation. Commitment confirmations re-evaluate the policy and operating-plan version. The legacy pilot tool also enforces readiness and safe quantities. Seller product IDs and exact SKU order filtering are checked server-side.
+
+## Interface localization
+
+The workspace owns the selected language and provides it through React context. Localized UI elements return the same native HTML tags, translate display copy and accessibility labels, and preserve event handlers, input values and submitted option values. This avoids mutating the DOM behind React or sending runtime translation requests. Bundled dictionaries cover English plus nine Indian languages. Templates preserve dynamic placeholders and record IDs. Names, technical identifiers and user-entered values retain their original content.
+
+The optional `locales:catalog` and `locales:generate` scripts collect source copy and generate missing bundled translations at build time. Review generated wording before production use. Native-speaker review is still pending. The product tour temporarily previews routes and Factory Mode, restores the original view/mode on close and performs no business mutations.

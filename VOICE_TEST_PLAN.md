@@ -27,3 +27,9 @@ The client starts speech at the first complete sentence. Fast device speech uses
 The interviewer reference starts speech alongside visible text. Launchpad now uses actual streamed provider deltas rather than adding an artificial word-reveal delay. Speech/transcription usage logging runs after the response; quota checks and confirmed changes remain synchronous.
 
 Regression checks also cover Hindi typed in Latin letters, multi-order confirmation, negated commands, unknown references, stale reviews, inline confirmation errors and saved/cancelled feedback. A controlled stream test verifies audible speech before the final answer event. Test real device voices separately, because headless-browser voices are mocked.
+
+## Vernacular interface and tour
+
+Test each language on Today, both order views, stock, catalogue, payments, help, onboarding, commitment and Operations. Forms, accessibility labels, confirmations, errors and dynamic counts should use the selected language. Input values, option values, user text and record IDs must remain unchanged. Confirm Marathi Devanagari follows the Marathi selection, and other regional scripts route correctly. Common order questions and English exact update requests can use translated workspace replies without a model call.
+
+Complete, skip and dismiss the product tour with Escape. Verify that it returns to the previous route and mode, focus returns to its trigger, and no mutation endpoint is called. Browser tests run with isolated local persistence; production provider checks are separate.

@@ -1,6 +1,7 @@
 import 'server-only';
 import {GoogleGenAI} from '@google/genai';
 import {Usage} from '../types';
+import {languageScripts} from '../language-scripts';
 import {assertFreeElevenLabsCharacters} from './elevenlabs-free';
 import {ElevenLabsSubscription} from './elevenlabs-free';
 export class ProviderError extends Error {constructor(public status:number,public retryAfter:string|null=null){super(status===429?'Provider quota reached. Try again later.':`Provider unavailable (${status}).`);}}
@@ -23,8 +24,8 @@ export async function narrate(provider:string,prompt:string,maxTokens:number,onT
  const started=Date.now();let text='',usage:Partial<Usage>={provider};
  const labels:Record<string,string>={en:'English',hi:'Hindi in Devanagari script',bn:'Bengali',mr:'Marathi',ta:'Tamil',te:'Telugu',gu:'Gujarati',kn:'Kannada',ml:'Malayalam',pa:'Punjabi'};
  const languageRule=`Reply only in ${labels[language]??language}. Begin directly in that language. Use 2 or 3 short sentences in everyday conversational language. Do not mention tool names, function names, providers or models. No markdown or em dashes. Ground facts and recommendations in the supplied tools. Never claim a change succeeded.`;
- let held='',verified=language!=='hi';
- const publish=(delta:string)=>{if(!delta)return;text+=delta;if(!verified){held+=delta;if(/[\u0900-\u097f]/u.test(held)){verified=true;onText(held);held='';}else if(held.length>120)throw new Error('The reply did not use the selected language');}else onText(delta);};
+ let held='',verified=!languageScripts[language];
+ const publish=(delta:string)=>{if(!delta)return;text+=delta;if(!verified){held+=delta;if(languageScripts[language]?.test(held)){verified=true;onText(held);held='';}else if(held.length>120)throw new Error('The reply did not use the selected language');}else onText(delta);};
  if(provider==='gemini'){
   const name=process.env.GEMINI_TEXT_MODEL??'gemini-3.8-flash';
   const ai=new GoogleGenAI({apiKey:process.env.GEMINI_API_KEY,httpOptions:{timeout:12000}});

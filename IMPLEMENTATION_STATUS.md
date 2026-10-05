@@ -2,7 +2,7 @@
 
 ## Implemented
 
-- Next.js App Router shell, seller and operations navigation, deep links, responsive layouts, Hindi/English dictionaries, sample-data disclosure, and local preview.
+- Next.js App Router shell, seller and operations navigation, deep links, responsive layouts, English plus bundled Hindi, Bengali, Marathi, Tamil, Telugu, Gujarati, Kannada, Malayalam and Punjabi interface dictionaries, sample-data disclosure, and local preview.
 - Orders search/status/deadline filtering, detail page, DEMO label download, explicit packed confirmation, inventory adjustment preview, catalogue edits, payment listing/export, onboarding save/resume, support request creation, and operations request resolution.
 - Deterministic sample demand/supply calculation and interactive saved scenarios.
 - Allowlisted assistant tools, explicit write confirmation, live Groq/Gemini provider adapters, recording/STT flow, cloud TTS, typed fallback, usage events, and application quota controls.

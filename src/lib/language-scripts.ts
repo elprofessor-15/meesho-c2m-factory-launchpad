@@ -1,0 +1,1 @@
+export const languageScripts:Record<string,RegExp>={hi:/[\u0900-\u097f]/u,mr:/[\u0900-\u097f]/u,bn:/[\u0980-\u09ff]/u,ta:/[\u0b80-\u0bff]/u,te:/[\u0c00-\u0c7f]/u,gu:/[\u0a80-\u0aff]/u,kn:/[\u0c80-\u0cff]/u,ml:/[\u0d00-\u0d7f]/u,pa:/[\u0a00-\u0a7f]/u};

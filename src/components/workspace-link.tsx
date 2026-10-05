@@ -1,4 +1,5 @@
 'use client';
+import {UI} from './localized-ui';
 import type {ComponentProps,MouseEvent} from 'react';
 
 // Every workspace screen uses the same loaded data and client renderer.
@@ -21,5 +22,5 @@ export default function WorkspaceLink({href,onClick,...props}:ComponentProps<'a'
   if(url.origin!==window.location.origin)return;
   event.preventDefault();navigate(href);
  }
- return <a {...props} href={href} onClick={open}/>;
+ return <UI.a {...props} href={href} onClick={open}/>;
 }

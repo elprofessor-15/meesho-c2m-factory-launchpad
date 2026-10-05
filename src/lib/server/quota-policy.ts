@@ -1,7 +1,7 @@
 export type QuotaKind='turns'|'model'|'stt'|'tts';
 const messages:Record<QuotaKind,string>={
  turns:'Daily assistant limit reached. You can still use the seller workspace; assistant access resets at the next UTC day.',
- model:'Daily project AI request limit reached. Read-only workspace pages remain available until the next UTC day.',
+ model:'Daily conversation request limit reached. Read-only workspace pages remain available until the next UTC day.',
  stt:'Daily speech time limit reached. You can keep typing questions; speech access resets at the next UTC day.',
  tts:'Daily spoken-reply limit reached. Your text answer is still available; cloud speech resets at the next UTC day.',
 };

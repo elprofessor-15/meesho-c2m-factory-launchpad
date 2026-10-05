@@ -548,3 +548,26 @@ dialog form .button-row { justify-content: flex-end; }
 .message > button { display: inline-flex; align-items: center; gap: 6px; margin-right: 6px; vertical-align: middle; }
 .voice-controls button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
 @media (max-width: 480px) { .voice-controls { padding-bottom: max(12px, env(safe-area-inset-bottom)); } }
+
+.tour-trigger {display:flex;align-items:center;gap:10px;}
+.tour-scrim {position:fixed;inset:0;z-index:100;background:rgb(30 20 30 / 25%);}
+.tour-panel {position:fixed;z-index:102;right:24px;bottom:32px;width:min(440px,calc(100vw - 32px));padding:24px;border:1px solid var(--border);border-top:4px solid var(--brand);border-radius:10px;background:var(--surface);box-shadow:0 12px 50px rgb(30 20 30 / 20%);}
+.tour-panel p {line-height:1.7;}
+.tour-panel small {color:var(--muted);font-size:12px;}
+.tour-panel .button-row {flex-wrap:wrap;justify-content:flex-end;}
+.tour-highlight {outline:3px solid var(--brand);outline-offset:5px;}
+@media (max-width:820px) {.tour-panel {right:16px;bottom:calc(78px + env(safe-area-inset-bottom));padding:18px;max-height:calc(100dvh - 120px);overflow:auto;}}
+
+/* Regional copy can be longer than English. Keep controls and records readable. */
+.header-actions {min-width:0;flex-wrap:wrap;}
+.header-actions .factory-toggle,.header-actions .voice-mode {max-width:100%;white-space:normal;text-align:center;}
+.header-actions .mode-label {overflow-wrap:anywhere;}
+.sidebar nav a {overflow-wrap:anywhere;}
+.page-heading,.section-head {flex-wrap:wrap;}
+.notice,.alert,.confirmation-copy,.tour-panel {overflow-wrap:anywhere;}
+@media (max-width:620px) {
+ .header-actions {flex:1 1 280px;justify-content:flex-end;}
+ .header-actions .factory-toggle {flex:0 1 auto;}
+ .header-actions .voice-mode {flex:0 1 auto;}
+ .topbar .breadcrumb strong {max-width:85px;overflow-wrap:anywhere;}
+}

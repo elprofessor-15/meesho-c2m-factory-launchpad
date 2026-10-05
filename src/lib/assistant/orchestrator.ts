@@ -22,7 +22,7 @@ export async function assistant(s:Session,message:string,language:string,options
  let turnLimit=false;
  const [snapshot]=await Promise.all([read(s),quota(s,'turns').catch(error=>{if(error instanceof AppQuotaError&&error.kind==='turns')turnLimit=true;else throw error;})]);check();
  const quick=quickIntent(snapshot,message);
- if(quick&&['en','hi'].includes(answerLanguage)){
+ if(quick){
   let result:Reply;
   if(quick.kind==='write'){
    result=await mutate(s,state=>{check();const reply=quick.run(state,s.id,answerLanguage);remember(state,message,reply.text);return reply;},snapshot);

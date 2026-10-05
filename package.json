@@ -14,7 +14,9 @@
     "lint": "eslint .",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "deploy:check": "node scripts/deployment-check.mjs"
+    "deploy:check": "node scripts/deployment-check.mjs",
+    "locales:catalog": "node scripts/locale-catalog.mjs",
+    "locales:generate": "node scripts/generate-locales.mjs"
   },
   "keywords": [],
   "author": "",

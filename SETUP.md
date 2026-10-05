@@ -53,6 +53,6 @@ Do not use `APP_DATA_MODE=local` on Vercel. The local filesystem is not durable 
 Review current Vercel plan terms for the intended use. A personal prototype and a commercial deployment are not interchangeable plan assumptions.
 ## Updated repository
 
-The factory workflow version is published separately as `elprofessor-15/meesho-c2m-factory-launchpad`. The earlier repository is preserved. Local source remains in `Meesho_Prototype`; `.env.local` is ignored and is not pushed. Use `npm run dev` from this folder and open `http://localhost:3000`. No Vercel deployment was performed for this update.
+The factory workflow version is published separately as `elprofessor-15/meesho-c2m-factory-launchpad_Endgame-IITBHU-`. The earlier repository is preserved. Local source remains in `Meesho_Prototype`; `.env.local` is ignored and is not pushed. Use `npm run dev` from this folder and open `http://localhost:3000`. The live prototype is https://meesho-c2m-factory-launchpad.vercel.app/today.
 
 Existing Supabase projects must apply `supabase/migrations/002_fix_quota_ambiguity.sql` after the initial migration. This preserves all counters while repairing the ambiguous `consume_quota` RPC. Keep any `SUPABASE_ACCESS_TOKEN` in `.env.local` only; it is for administration, never app runtime or Vercel.

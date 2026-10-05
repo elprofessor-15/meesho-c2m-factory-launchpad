@@ -39,7 +39,7 @@ test('Factory Mode opens batches immediately and stays consistent on reload and 
  await page.locator('.sidebar nav').getByRole('link',{name:/Orders/}).click();
  await expect(page.getByRole('heading',{name:'One packing run. Every order accounted for.'})).toBeVisible();
  await page.goto('/today');await expect(page).toHaveURL(/\/orders\?view=batches$/);
- await page.getByLabel('Interface language').selectOption('hi');
+ await page.locator('.language-control select').selectOption('hi');
  await expect(page.getByRole('button',{name:'फैक्टरी मोड',exact:true})).toHaveAttribute('aria-pressed','true');
  await expect(page.locator('.voice-mode')).toHaveText('बोलकर काम करें');
  await expect(page.locator('html')).toHaveAttribute('lang','hi');
@@ -55,7 +55,7 @@ test('mode and language controls remain visible on small screens',async({page})=
  for(const width of [1440,1024,768,390,320]){
   await page.setViewportSize({width,height:900});
   for(const language of ['en','hi','ta']){
-   await page.getByLabel('Interface language').selectOption(language);
+   await page.locator('.language-control select').selectOption(language);
    await expect(page.locator('.header-actions .factory-toggle')).toBeVisible();
    await expect(page.locator('.header-actions .voice-mode')).toBeVisible();
    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),`${width} ${language}`).toBe(true);
@@ -69,8 +69,8 @@ test('Factory Mode and language changes sync across browser tabs',async({page,co
  await page.getByRole('button',{name:'Factory Mode',exact:true}).click();
  await expect(other).toHaveURL(/view=batches/);
  await expect(other.getByRole('button',{name:'Factory Mode',exact:true})).toHaveAttribute('aria-pressed','true');
- await page.getByLabel('Interface language').selectOption('hi');
- await expect(other.getByLabel('Interface language')).toHaveValue('hi');
+ await page.locator('.language-control select').selectOption('hi');
+ await expect(other.locator('.language-control select')).toHaveValue('hi');
  await expect(other.locator('html')).toHaveAttribute('lang','hi');
  await page.getByRole('button',{name:'फैक्टरी मोड',exact:true}).click();
  await expect(other).toHaveURL(/view=individual/);

@@ -2,9 +2,10 @@ import {State,Action} from '../types';
 import {filterOrders,money,sellerProducts,summary} from '../services';
 import {batches} from '../launch';
 import {prepare} from './actions';
+import {translate} from '../i18n';
 export type Reply={text:string;spoken:string;provider:string;language:string;route?:string;action?:Action;records?:unknown[];choices?:{label:string;message:string}[]};
 export type QuickIntent={kind:'read'|'write';run:(state:State,user:string,language:string)=>Reply};
-const reply=(text:string,language:string,extra:Partial<Reply>={}):Reply=>({text,spoken:text,provider:'Workspace',language,...extra});
+const reply=(text:string,language:string,extra:Partial<Reply>={}):Reply=>{const localized=translate(language,text);return{text:localized,spoken:localized,provider:'Workspace',language,...extra};};
 const hindi=(language:string)=>language==='hi';
 export function orderReferences(message:string){
  const digits:Record<string,string>={zero:'0',one:'1',two:'2',three:'3',four:'4',five:'5',six:'6',seven:'7',eight:'8',nine:'9'};
@@ -15,6 +16,7 @@ export function orderReferences(message:string){
 }
 export function quickIntent(state:State,message:string):QuickIntent|null{
  const m=message.toLowerCase(),products=sellerProducts(state);
+ const nativeOrderCount=/(অর্ডার|ஆர்டர்|ఆర్డర్|ઓર્ડર|ಆರ್ಡರ್|ഓർഡ(?:ർ|റ)|ਆਰਡਰ)/u.test(m)&&/(আজ|இன்று|ఈరోజు|આજે|ಇಂದು|ഇന്ന്|ਅੱਜ)/u.test(m)&&/(কত|எத்தனை|ఎన్ని|કેટલા|ಎಷ್ಟು|എത്ര|ਕਿੰਨੇ)/u.test(m);
  const ids=orderReferences(message);
  if((/pack|prepared|stock|तैयार|पैक|स्टॉक/.test(m))&&(/\b(don't|do not|not|mat)\b|नहीं|मत/.test(m)))return{kind:'read',run:(_s,_u,l)=>reply(hindi(l)?'कोई बदलाव नहीं किया गया। जब तैयार हों, सही ऑर्डर नंबर या नया कुल स्टॉक बताइए।':'No changes made. When you are ready, tell me the exact order numbers or new total stock.',l)};
  const packing=/pack|prepared|taiyar|तैयार|पैक/.test(m)&&/order|orders|ऑर्डर|आर्डर|ऑर्डर्स|LP[\s-]*\d/i.test(message)&&/\b(i|i've|have|mark|update|maine|kar|kiya|ho gaye)\b|मैंने|कर दिया|कर दो|किया/.test(m);
@@ -40,6 +42,6 @@ export function quickIntent(state:State,message:string):QuickIntent|null{
  if(/batch|packing run|पैकिंग बैच/.test(m)&&!packing)return{kind:'read',run:(s,_u,l)=>{const rows=batches(s).filter(b=>b.due<=s.date);return reply(hindi(l)?`आज और पिछले बाकी काम के ${rows.length} पैकिंग बैच हैं।`:`${rows.length} packing batches are due today or overdue.`,l,{route:'/orders?view=batches',records:rows.map(b=>({id:b.id,name:b.name,variant:b.variant,due:b.due,units:b.units,orders:b.orders.map(o=>o.id)})),choices:rows.slice(0,4).map(b=>({label:`Pack ${b.name}`,message:`Mark batch ${b.id} packed`}))});}};
  if(/stock|inventory|स्टॉक|kitna stock|running low|products.*low/.test(m)&&!/(why|explain|demand|forecast|next week|क्यों)/.test(m))return{kind:'read',run:(s,_u,l)=>{let rows=sellerProducts(s);if(product)rows=rows.filter(p=>p.id===product.id);if(/low|कम/.test(m))rows=rows.filter(p=>p.stock-p.reserved<40);const text=rows.length===1?(hindi(l)?`${rows[0].name} का उपलब्ध स्टॉक ${rows[0].stock-rows[0].reserved} यूनिट है। ${rows[0].reserved} यूनिट ऑर्डर के लिए आरक्षित हैं।`:`${rows[0].name} has ${rows[0].stock-rows[0].reserved} available units, with ${rows[0].reserved} reserved for orders.`):(hindi(l)?`${rows.length} उत्पादों का उपलब्ध स्टॉक नीचे है।`:`Stock for ${rows.length} products is listed below.`);return reply(text,l,{route:'/inventory',records:rows.map(p=>({id:p.id,name:p.name,stock:p.stock,reserved:p.reserved,available:p.stock-p.reserved}))});}};
  if(/payment|payout|भुगतान|paisa kab/.test(m)&&!/(why|explain|क्यों)/.test(m))return{kind:'read',run:(s,_u,l)=>{const rows=s.payments.filter(p=>p.status==='Expected').sort((a,b)=>a.date.localeCompare(b.date));const next=rows[0];const text=next?(hindi(l)?`अगला अपेक्षित भुगतान ${money(next.amount)} है, तारीख ${next.date}।`:`Your next expected payout is ${money(next.amount)} on ${next.date}.`):(hindi(l)?'अभी कोई अपेक्षित भुगतान दर्ज नहीं है।':'No expected payout is currently recorded.');return reply(text,l,{route:'/payments',records:rows});}};
- if(/order|bhej|ऑर्डर|भेज/.test(m)&&/(how many|today|aaj|kitne|kitna|due|आज|कितने|show)/.test(m)&&!/(why|explain|next|tomorrow|cancel|prepared|pack|कल)/.test(m))return{kind:'read',run:(s,_u,l)=>{const rows=filterOrders(s,{status:'ready_to_ship',due:'today',...(product?{sku:product.id}:{})});const overdue=summary(s).overdue;return reply(hindi(l)?`आज ${rows.length} ऑर्डर भेजने हैं। ${overdue} पुराने ऑर्डर भी बाकी हैं।`:`${rows.length} orders are ready for dispatch today. ${overdue} overdue orders also need attention.`,l,{route:'/orders?status=ready_to_ship&due=today',records:rows.map(o=>({id:o.id,sku:o.sku,quantity:o.quantity,due:o.due,status:o.status}))});}};
+ if((nativeOrderCount||/order|bhej|ऑर्डर|भेज/.test(m)&&/(how many|today|aaj|kitne|kitna|due|आज|कितने|show)/.test(m)&&!/(why|explain|next|tomorrow|cancel|prepared|pack|कल)/.test(m)))return{kind:'read',run:(s,_u,l)=>{const rows=filterOrders(s,{status:'ready_to_ship',due:'today',...(product?{sku:product.id}:{})});const overdue=summary(s).overdue;return reply(hindi(l)?`आज ${rows.length} ऑर्डर भेजने हैं। ${overdue} पुराने ऑर्डर भी बाकी हैं।`:`${rows.length} orders are ready for dispatch today. ${overdue} overdue orders also need attention.`,l,{route:'/orders?status=ready_to_ship&due=today',records:rows.map(o=>({id:o.id,sku:o.sku,quantity:o.quantity,due:o.due,status:o.status}))});}};
  return null;
 }

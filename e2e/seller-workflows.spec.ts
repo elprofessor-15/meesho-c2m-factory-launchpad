@@ -58,7 +58,7 @@ test('seller actions, planning, support handoff and assistant',async({page})=>{
   await page.route('**/api/assistant',async route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({text:'आज 3 ऑर्डर भेजने हैं।',spoken:'आज 3 ऑर्डर भेजने हैं।',provider:'mock',records:[]})}));
   await page.setViewportSize({width:390,height:844});
   await page.locator('.floating-mic').click();
-  await expect(page.getByLabel('Launchpad assistant')).toBeVisible();
+  await expect(page.locator('.assistant')).toBeVisible();
   await page.locator('.voice-controls textarea').fill('Aaj kitne orders bhejne hain?');
   await page.locator('.voice-controls button.primary').click();
   await expect(page.locator('.message.assistant-message').last()).toContainText(/orders|ऑर्डर|groq/i,{timeout:30000});
