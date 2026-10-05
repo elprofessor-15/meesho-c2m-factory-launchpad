@@ -109,7 +109,7 @@ begin
 
   insert into public.quota_counters (scope, usage_day, quota_kind, used)
   values (counter_scope, (now() at time zone 'utc')::date, quota_kind, 0)
-  on conflict (scope, usage_day, quota_kind) do nothing;
+  on conflict on constraint quota_counters_pkey do nothing;
 
   update public.quota_counters as counter
   set used = counter.used + $2

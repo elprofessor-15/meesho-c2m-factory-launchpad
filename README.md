@@ -6,7 +6,7 @@ Persistent notice in the app: **Independent prototype. Sample business data.**
 
 ## Run locally
 
-Requirements: Node.js 20.9 or later and npm.
+Requirements: Node.js 24 and npm.
 
 ```sh
 npm install
@@ -62,3 +62,11 @@ Hosted persistence currently stores a versioned JSON state document per authenti
 The new `/commitment` workspace separates demand evidence, physical readiness and the next bounded stock decision. Factory Mode reduces seller navigation to five daily destinations. Batch preparation groups exact SKU/variant/deadline work, exports packing lists and labels, and confirms all affected orders atomically. The named activation contact and first-cycle checklist make ownership explicit. Workload records measure owner time, worker time and errors without inventing a time-saving claim.
 
 See [FACTORY_MODE.md](FACTORY_MODE.md) for the decision rules, SMS simulator boundary and remaining validation requirements. The SMS simulator does not send messages; real carrier pickup and minimum orders are never promised.
+
+## Voice reliability repair
+
+Apply `supabase/migrations/002_fix_quota_ambiguity.sql` to existing projects. It repairs the `consume_quota` RPC without resetting counters. The original column/parameter collision produced a database error that was incorrectly reported as a daily limit. Database availability failures now return a separate 503 error; actual application limits return 429 with `Retry-After`.
+
+LLM requests move to the next configured provider on failure or empty responses. STT tries Groq then eligible ElevenLabs Free Scribe. TTS tries Gemini then eligible ElevenLabs Free speech, followed by a matching device voice. Free ElevenLabs API TTS requires a compatible premade voice; the Sarah voice in `.env.example` was tested in Hindi. Cloud speech failures preserve the text answer and introduce a cooldown to avoid repeated failed requests. Turning read-aloud off cancels pending playback. Device speech depends on an installed voice for the requested language.
+
+`SUPABASE_ACCESS_TOKEN` is a local administration credential for migrations. It is excluded from environment synchronization and deployment uploads. It is never required by the running app.

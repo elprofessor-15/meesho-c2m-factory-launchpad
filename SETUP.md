@@ -2,7 +2,7 @@
 
 ## Local preview
 
-1. Install Node.js 20.9+ and npm.
+1. Install Node.js 24 and npm.
 2. From the repository root, run `npm install`.
 3. Copy `.env.example` to `.env.local`.
 4. Keep `APP_DATA_MODE="local"` for an isolated local preview. The browser receives a private demo cookie and state is stored under the ignored `.local-data/` directory.
@@ -14,7 +14,7 @@
 - **Groq**: create a key at [console.groq.com/keys](https://console.groq.com/keys), then put it in `GROQ_API_KEY`. Speech-to-text uses `GROQ_STT_MODEL` (`whisper-large-v3-turbo` by default). Read [speech-to-text](https://console.groq.com/docs/speech-to-text) and [rate limits](https://console.groq.com/docs/rate-limits).
 - **Gemini**: create a key at [aistudio.google.com/apikey](https://aistudio.google.com/apikey), then put it in `GEMINI_API_KEY`. Text uses `GEMINI_TEXT_MODEL`; speech uses `GEMINI_TTS_MODEL`. Review [key safety](https://ai.google.dev/gemini-api/docs/api-key), [pricing](https://ai.google.dev/gemini-api/docs/pricing), [limits](https://ai.google.dev/gemini-api/docs/rate-limits), and [speech generation](https://ai.google.dev/gemini-api/docs/speech-generation) before a presentation.
 - **Optional OpenRouter fallback**: a free-model route is configured in `.env.example`. It is only attempted if the provider list includes it and its key exists. Do not use a paid model for the free-tier demo.
-- **ElevenLabs Free fallback**: Scribe batch STT is API-enabled on the Free plan within its included monthly hours. Add `ELEVENLABS_API_KEY` and set `ENABLE_ELEVENLABS_FREE_TIER=true`; each use checks that the account is Free and usage-based overage is disabled. The Free plan's text-to-speech API rejects library voices with `paid_plan_required`, even though the plan page lists UI TTS characters. This app therefore uses Gemini for cloud TTS and does not call ElevenLabs TTS unless you explicitly enable the paid fallback.
+- **ElevenLabs Free fallback**: Scribe batch STT is API-enabled on the Free plan within its included monthly hours. Add `ELEVENLABS_API_KEY` and set `ENABLE_ELEVENLABS_FREE_TIER=true`; each use checks that the account is Free and usage-based overage is disabled. The Free plan's text-to-speech API rejects library voices with `paid_plan_required`, even though the plan page lists UI TTS characters. Premade multilingual voices are Free-API compatible: the Sarah voice (`EXAVITQu4vr4xnSDxMaL`) was tested successfully in Hindi. With the Free-tier flag enabled, this app tries Gemini then ElevenLabs TTS within remaining characters, followed by device speech.
 
 ElevenLabs free STT can still be exhausted by use outside this app; the provider enforces the account allowance. `ALLOW_PAID_SPEECH_FALLBACK` is separate and defaults to false. Setting it true can incur paid usage and is not needed for Free Scribe STT.
 
@@ -54,3 +54,5 @@ Review current Vercel plan terms for the intended use. A personal prototype and 
 ## Updated repository
 
 The factory workflow version is published separately as `elprofessor-15/meesho-c2m-factory-launchpad`. The earlier repository is preserved. Local source remains in `Meesho_Prototype`; `.env.local` is ignored and is not pushed. Use `npm run dev` from this folder and open `http://localhost:3000`. No Vercel deployment was performed for this update.
+
+Existing Supabase projects must apply `supabase/migrations/002_fix_quota_ambiguity.sql` after the initial migration. This preserves all counters while repairing the ambiguous `consume_quota` RPC. Keep any `SUPABASE_ACCESS_TOKEN` in `.env.local` only; it is for administration, never app runtime or Vercel.
