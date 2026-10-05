@@ -6,10 +6,10 @@ A manufacturer workspace for daily orders, packing, stock, payouts and the next 
 
 ## What you can try
 
-- **Factory Mode:** five daily destinations, with packing batches, labels and a clear work queue.
+- **Factory Mode:** use the factory icon in the header to open packing batches immediately. Five daily destinations share the same loaded workspace, so tabs switch without reloading business data.
 - **Ask Launchpad:** type or speak in your chosen language. Common order, stock and payout questions use workspace records directly. Longer answers appear progressively, with speech starting at the first complete sentence.
 - **Voice updates:** say “I have prepared orders LP 8042 and LP 8047” or “Set SKU-101 stock to 50”. Review the exact update and press **Confirm update**. Packing does not record courier handover.
-- **Speech controls:** choose a fast device voice or a cloud voice. Stop playback, replay a reply, or optionally send recordings immediately after transcription. A matching installed voice is needed for device speech.
+- **Speech controls:** open Voice mode from the header and choose your language next to it. Choose a fast device voice or a cloud voice. Stop playback, replay a reply, or optionally send recordings immediately after transcription. A matching installed voice is needed for device speech.
 - **Production decisions:** compare demand evidence, operating readiness, cash exposure and a bounded stock commitment. No minimum orders are promised.
 - **Support:** a named activation contact, callback and visit requests, and a first-cycle checklist. The SMS simulator demonstrates constrained reply handling; it does not send messages.
 

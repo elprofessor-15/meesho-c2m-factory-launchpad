@@ -1,7 +1,7 @@
 'use client';
 
 import {useMemo,useState} from 'react';
-import Link from 'next/link';
+import Link from './workspace-link';
 import {ArrowRight,ClipboardCheck,Clock3,Factory,Headphones,TriangleAlert} from 'lucide-react';
 import {State,Support} from '@/lib/types';
 import {available,interventions,sellerProducts,summary} from '@/lib/services';

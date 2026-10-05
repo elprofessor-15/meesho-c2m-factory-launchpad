@@ -1,3 +1,2 @@
-import {Suspense} from 'react';
-import Workspace from '@/components/workspace';
-export default function Page(){return <Suspense fallback={<p className="loading">Opening your workspace…</p>}><Workspace/></Suspense>;}
+// The shared layout keeps data, preferences and conversation state between tabs.
+export default function Page(){return null;}

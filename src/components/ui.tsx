@@ -1,7 +1,7 @@
 'use client';
 import {useEffect,useRef} from 'react';
 import {X,ArrowUpRight} from 'lucide-react';
-import Link from 'next/link';
+import Link from './workspace-link';
 export function Modal({title,children,onClose}:{title:string;children:React.ReactNode;onClose:()=>void}){const ref=useRef<HTMLDialogElement>(null);useEffect(()=>{const d=ref.current;d?.showModal();return()=>d?.close();},[]);return <dialog ref={ref} onCancel={event=>{event.preventDefault();onClose();}} onClick={e=>{if(e.target===e.currentTarget)onClose();}}><div className="dialog-title"><h2>{title}</h2><button className="icon" aria-label="Close" onClick={onClose}><X size={20}/></button></div>{children}</dialog>;}
 export function Badge({children,tone=''}:{children:React.ReactNode;tone?:string}){return <span className={'badge '+tone}>{children}</span>;}
 export function Metric({label,value,note}:{label:string;value:React.ReactNode;note?:string}){return <div className="metric"><span>{label}</span><strong>{value}</strong>{note&&<small>{note}</small>}</div>;}

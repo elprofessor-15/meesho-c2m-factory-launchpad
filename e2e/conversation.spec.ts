@@ -18,6 +18,9 @@ test('speech and text start before the streamed reply is finished',async({page})
  await expect(page.locator('.assistant-message')).toContainText('Four orders are due today.');
  await expect.poll(()=>page.evaluate(()=>Reflect.get(window,'__spoken').length)).toBe(1);
  await expect(page.locator('.stream-cursor')).toBeVisible();
+ await page.locator('.sidebar nav').getByRole('link',{name:/Orders/}).click();
+ await expect(page.locator('main h1')).toHaveText('Orders');
+ await expect(page.locator('.stream-cursor')).toBeVisible();
  await page.evaluate(()=>Reflect.get(window,'__finishReply')());
  await expect.poll(()=>page.evaluate(()=>Reflect.get(window,'__spoken').length)).toBe(2);
  await expect(page.locator('.stream-cursor')).toHaveCount(0);expect(cloud).toBe(0);
