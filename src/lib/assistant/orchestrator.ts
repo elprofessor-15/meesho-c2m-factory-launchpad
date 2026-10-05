@@ -7,7 +7,7 @@ import {runTool,toolDefinitions} from './tools';
 import {responseLanguage} from '../i18n';
 import {Usage,State} from '../types';
 import {quickIntent,Reply} from './quick';
-import {cleanReply,cleanSpeech} from '../stream';
+import {cleanReply,cleanSpeech,ReplyTextStream} from '../stream';
 export type AssistantEvent={type:'status';message:string}|{type:'text';text:string}|{type:'done';reply:Reply}|{type:'error';error:string};
 export type AssistantOptions={onEvent?:(event:AssistantEvent)=>void;signal?:AbortSignal};
 export function safeRoute(route:unknown){return typeof route==='string'&&/^\/(today|orders|inventory|demand|payments|support|catalogue|onboarding|commitment)(\?|\/|$)/.test(route)&&!route.includes('://')?route:undefined;}
@@ -36,6 +36,7 @@ export async function assistant(s:Session,message:string,language:string,options
  if(turnLimit)return{text:answerLanguage==='hi'?'आज बातचीत की सीमा पूरी हो गई है। ऑर्डर, स्टॉक और भुगतान के पेज उपलब्ध हैं।':'Today’s conversation allowance is used. Orders, stock and payment pages remain available.',spoken:'',provider:'Workspace',language:answerLanguage};
  let state=await mutate(s,st=>{if(st.activeUntil>Date.now())throw new Error('A reply is already in progress. Please wait or stop it.');st.activeUntil=Date.now()+60000;return st;},snapshot);
  const attempts:Partial<Usage>[]=[];let answer:Reply|undefined,streamed='';
+ const textStream=new ReplyTextStream(answerLanguage,text=>emit({type:'text',text}));
  try{
   const providers=configuration().llm;
   if(!providers.length)return{text:answerLanguage==='hi'?'इस अनुरोध के लिए बातचीत सेवा उपलब्ध नहीं है। ऑर्डर नंबर, कुल स्टॉक या भुगतान का सीधा सवाल पूछिए।':'The conversation service is unavailable for this request. Try an exact order number, total stock update or payout question.',spoken:'',provider:'Workspace',language:answerLanguage};
@@ -48,8 +49,8 @@ export async function assistant(s:Session,message:string,language:string,options
    check();provider=providers[providerIndex];emit({type:'status',message:records.length?'Writing your answer':'Understanding your request'});
    try{
     await quota(s,'model');check();
-    const response=records.length&&options.onEvent?await narrate(provider,prompt,env().AI_MAX_OUTPUT_TOKENS,delta=>{check();streamed+=delta;emit({type:'text',text:cleanReply(delta)});},options.signal,answerLanguage):await model(provider,prompt,toolDefinitions,env().AI_MAX_OUTPUT_TOKENS,options.signal);
-    if(!response.text.trim()&&!response.calls.length)throw new Error('Empty reply');attempts.push(response.usage);text=cleanReply(response.text);
+    const response=records.length&&options.onEvent?await narrate(provider,prompt,env().AI_MAX_OUTPUT_TOKENS,delta=>{check();streamed+=delta;textStream.push(delta);},options.signal,answerLanguage):await model(provider,prompt,toolDefinitions,env().AI_MAX_OUTPUT_TOKENS,options.signal);
+    if(!response.text.trim()&&!response.calls.length)throw new Error('Empty reply');attempts.push(response.usage);text=cleanReply(response.text,answerLanguage);if(streamed)textStream.finish();
     if(!response.calls.length)break;
     for(const call of response.calls.slice(0,3)){
      check();let result:Record<string,unknown>;

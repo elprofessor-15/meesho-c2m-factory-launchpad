@@ -3,7 +3,7 @@ import {seed} from '../src/lib/fixtures';
 import {quickIntent,orderReferences} from '../src/lib/assistant/quick';
 import {confirm,prepare} from '../src/lib/assistant/actions';
 import {batches} from '../src/lib/launch';
-import {cleanSpeech,takeSentences,lines} from '../src/lib/stream';
+import {cleanSpeech,cleanReply,ReplyTextStream,takeSentences,lines} from '../src/lib/stream';
 describe('direct conversational work',()=>{
  it('answers today from the actual order records',()=>{const state=seed();const intent=quickIntent(state,'Aaj kitne orders bhejne hain?')!;expect(intent.kind).toBe('read');const result=intent.run(state,'user','hi');expect(result.text).toContain('आज 4');expect(result.records).toHaveLength(4);expect(state.actions).toHaveLength(0);});
  it('uses the same low-stock threshold as the daily queue',()=>{const s=seed();const r=quickIntent(s,'Which products are running low?')!.run(s,'user','en');expect(r.records).toHaveLength(2);});
@@ -20,6 +20,7 @@ describe('direct conversational work',()=>{
 });
 describe('incremental answer transport',()=>{
  it('holds unfinished sentences and avoids breaking decimal numbers',()=>{expect(takeSentences('Price is 1.5 rupees. Next')).toEqual({parts:['Price is 1.5 rupees.'],rest:'Next'});expect(takeSentences('आज चार ऑर्डर हैं। अगला')).toEqual({parts:['आज चार ऑर्डर हैं।'],rest:'अगला'});expect(takeSentences('unfinished')).toEqual({parts:[],rest:'unfinished'});});
+ it('keeps internal names out of full replies and token-split streams',()=>{expect(cleanReply('get_commitment_decision says Hold','hi')).toBe('तैयारी की समीक्षा says Hold');const deltas:string[]=[];const stream=new ReplyTextStream('hi',text=>deltas.push(text));for(const text of ['The get_', 'commitment_', 'decision says ', 'Hold.'])stream.push(text);stream.finish();expect(deltas.join('')).toBe('The तैयारी की समीक्षा says Hold.');expect(deltas.some(text=>text.includes('get_'))).toBe(false);});
  it('removes formatting from spoken text',()=>{expect(cleanSpeech('**Four orders** — [Open](/orders)')).toBe('Four orders, Open');});
  it('decodes Hindi and events across arbitrary network chunk boundaries',async()=>{const bytes=new TextEncoder().encode('पहला\nsecond\n');const stream=new ReadableStream<Uint8Array>({start(controller){for(let i=0;i<bytes.length;i+=2)controller.enqueue(bytes.slice(i,i+2));controller.close();}});const result=[];for await(const line of lines(stream))result.push(line);expect(result).toEqual(['पहला','second']);});
 });
